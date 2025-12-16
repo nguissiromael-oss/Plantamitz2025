@@ -1,0 +1,32 @@
+// Affichage
+        display_board(board, cursor_r, cursor_c, selected_r, selected_c);
+        display_game_info(&player, &contract, time_remaining);
+
+        // Gestion des entrées
+        keep_playing = handle_input(board, &cursor_r, &cursor_c, &selected_r, &selected_c, &contract);
+
+        // Condition de victoire
+        if (is_contract_fulfilled(&contract)) {
+            printf("\n\033[32m[VICTOIRE]\033[0m Contrat du Tableau %d rempli !\n", contract.level_id);
+
+            player.current_level++;
+            player.lives = MAX_LIVES;
+            save_progression(&player);
+
+            if (player.current_level <= MAX_LEVELS) {
+                printf("Passage au Tableau suivant. Appuyez sur une touche pour continuer...\n");
+                getch();
+                start_new_level(board, &player, &contract, &cursor_r, &cursor_c);
+                start_time = time(NULL);
+            } else {
+                printf("Félicitations, vous avez terminé le jeu !\n");
+                keep_playing = 0;
+            }
+        }
+    }
+
+    printf("\n--- PARTIE TERMINEE ---\n");
+    printf("Progression sauvegardée. Au revoir %s.\n", player.name);
+
+    return 0;
+}
