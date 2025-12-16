@@ -1,0 +1,31 @@
+#define LIGNES 25
+#define COLONNES 
+#include <stdio.h>
+
+typedef struct {
+    int fraises;
+    int pommes;
+    int oignons;
+    int mandarines;
+    int soleils;
+} Contrat;
+
+typedef struct {
+    char grille[LIGNES][COLONNES];
+    Contrat contrat;
+    int coupsRestants;
+    int niveau;
+} Sauvegarde;
+
+void sauvegarderPartie(Sauvegarde jeu) {
+    FILE *fichier = fopen("sauvegarde.dat", "wb");
+    if (fichier == NULL) {
+        printf("Erreur lors de la sauvegarde\n");
+        return;
+    }
+
+    fwrite(&jeu, sizeof(Sauvegarde), 1, fichier);
+    fclose(fichier);
+
+    printf("Partie sauvegardee avec succes !\n");
+}
