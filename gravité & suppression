@@ -1,0 +1,70 @@
+int detecter_et_supprimer(Partie *p) {
+    int trouve = 0;
+    char masque[L][C] = {0};
+
+    // Détection horizontale
+    for (int i = 0; i < L; i++) {
+        for (int j = 0; j < C - 2; j++) {
+            if (p->grille[i][j] != ' ' &&
+                p->grille[i][j] == p->grille[i][j+1] &&
+                p->grille[i][j] == p->grille[i][j+2]) {
+
+                masque[i][j] = 1;
+                masque[i][j+1] = 1;
+                masque[i][j+2] = 1;
+                trouve = 1;
+            }
+        }
+    }
+
+    // Détection verticale
+    for (int j = 0; j < C; j++) {
+        for (int i = 0; i < L - 2; i++) {
+            if (p->grille[i][j] != ' ' &&
+                p->grille[i][j] == p->grille[i+1][j] &&
+                p->grille[i][j] == p->grille[i+2][j]) {
+
+                masque[i][j] = 1;
+                masque[i+1][j] = 1;
+                masque[i+2][j] = 1;
+                trouve = 1;
+            }
+        }
+    }
+
+    // Suppression + comptage
+    if (trouve) {
+        for (int i = 0; i < L; i++) {
+            for (int j = 0; j < C; j++) {
+                if (masque[i][j]) {
+                    for (int k = 0; k < 5; k++)
+                        if (p->grille[i][j] == types[k])
+                            p->recolte[k]++;
+
+                    p->grille[i][j] = ' ';
+                }
+            }
+        }
+    }
+    return trouve;
+}
+
+void appliquer_gravite(Partie *p) {
+    for (int j = 0; j < C; j++) {
+        int vide = L - 1;
+
+        // Descente des items existants
+        for (int i = L - 1; i >= 0; i--) {
+            if (p->grille[i][j] != ' ') {
+                char tmp = p->grille[i][j];
+                p->grille[i][j] = ' ';
+                p->grille[vide][j] = tmp;
+                vide--;
+            }
+        }
+
+        // Remplissage du haut avec de nouveaux items
+        for (int i = vide; i >= 0; i--)
+            p->grille[i][j] = types[rand() % 5];
+    }
+}
