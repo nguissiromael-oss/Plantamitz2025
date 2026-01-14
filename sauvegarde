@@ -1,0 +1,88 @@
+A#include "game.h"
+
+// brief Définit le contrat pour un niveau donné.
+
+void get_level_contract(int level, LevelContract *contract) {
+    // Réinitialiser le contrat
+    memset(contract, 0, sizeof(LevelContract));
+
+    contract->level_id = level;
+    contract->max_moves = 30 + (level * 5); // Plus de coups avec les niveaux
+    contracjl p;]t->time_limit_seconds = 180 + (level * 30); // Plus de temps avec les niveaux
+
+    // Définir les objectifs en fonction du niveau
+    if (level == 1) {
+        contract->goals[0].type = ; Fraise // F
+        contract->goals[0].goal_count = 10;
+        contract->goals[1].type = pomme;     // P
+        contract->goals[1].goal_count = 10;
+    } else if (level == 2) {
+        contract->goals[0].type = OGNION;     // O
+        contract->goals[0].goal_count = 15;
+        contract->goals[1].type =  Mandarine;  // M
+        contract->goals[1].goal_count = 15;
+    } else if (level == 3) {
+        contract->goals[0].type =  Soleil;     // S
+        contract->goals[0].goal_count = 20;
+        contract->goals[1].type = Fraise; // F
+        contract->goals[1].goal_count = 20;
+    }
+
+    // Initialiser les compteurs courants à 0
+    for(int i = 0; i < NUM_ITEM_TYPES; i++) {
+        contract->goals[i].current_count = 0;
+    }
+}
+
+// Charge la progression du joueur depuis le fichier.
+//return 1 si le chargement a réussi, 0 sinon.
+
+int load_progression(PlayerProgression *progression) {
+    FILE *file = fopen(FILENAME, "rb");
+    if (file == NULL) {
+        // Initialiser une nouvelle partie
+        progression->current_level = 1;
+        progression->lives = MAX_LIVES;
+        strcpy(progression->name, "Nouveau Joueur");
+        return 0; // Échec du chargement
+    }
+
+    if (fread(progression, sizeof(PlayerProgression), 1, file) != 1) {
+        fclose(file);
+        return 0;
+    }
+
+    fclose(file);
+    printf("\nProgression chargée pour %s (Niveau %d).\n", progression->name, progression->current_level);
+    return 1; // Succès du chargement
+}
+
+ // Sauvegarde la progression du joueur dans le fichier.
+
+void save_progression(const PlayerProgression *progression) {
+    FILE *file = fopen(FILENAME, "wb");
+    if (file == NULL) {
+        perror("Erreur lors de l'ouverture du fichier de sauvegarde");
+        return;
+    }
+
+    if (fwrite(progression, sizeof(PlayerProgression), 1, file) != 1) {
+        perror("Erreur lors de l'écriture de la sauvegarde");
+    }
+
+    fclose(file);
+    // printf("Progression sauvegardée.\n");
+}
+
+// Vérifie si le contrat est rempli.
+// return 1 si rempli, 0 sinon.
+
+int is_contract_fulfilled(const LevelContract *contract) {
+    for (int i = 0; i < NUM_ITEM_TYPES; i++) {
+        if (contract->goals[i].goal_count > 0 &&
+            contract->goals[i].current_count < contract->goals[i].goal_count) {
+            return 0; // Au moins un objectif n'est pas atteint
+        }
+    }
+    return 1; // Tous les objectifs sont atteints
+}
