@@ -1,0 +1,30 @@
+void initialiser_niveau(Partie *p) {
+    p->sx = -1; p->sy = -1;
+    for(int i=0; i<5; i++) p->recolte[i] = 0;
+
+    // Contrats simplifiés : 2 ou 3 items maximum
+    if(p->niveau == 1) {
+        p->contrat[0] = 20; // 20 Soleils
+        p->contrat[1] = 10; // 10 Fraises
+        p->contrat[2] = 15; // 15 Pommes
+        p->contrat[3] = 15; // 15 Oignons
+        p->contrat[4] = 10; // 10 Mandarines
+        p->coups = 30; p->temps_max = 150;
+    } else {
+        if(p->niveau == 2){
+            p->contrat[0] = 25; // 20 Soleils
+            p->contrat[1] = 15; // 10 Fraises
+            p->contrat[2] = 15; // 15 Pommes
+            p->contrat[3] = 20; // 15 Oignons
+            p->contrat[4] = 15; // 10 Mandarines
+            p->coups = 25; p->temps_max = 100;
+        }else{
+            p->contrat[0] = 30; // 20 Soleils
+            p->contrat[1] = 25; // 10 Fraises
+            p->contrat[2] = 20; // 15 Pommes
+            p->contrat[3] = 20; // 15 Oignons
+            p->contrat[4] = 15; // 10 Mandarines
+            p->coups = 20; p->temps_max = 50;
+        }
+
+    }
