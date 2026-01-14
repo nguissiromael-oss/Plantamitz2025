@@ -1,0 +1,65 @@
+#include "jeu.h"
+
+void set_color(int text) {
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), text);
+}
+
+void afficher_interface(Partie *p, int tr) {
+    gotoxy(0, 0);
+    set_color(15);
+    // On efface la ligne avec des espaces pour éviter les restes de texte
+    printf("JOUEUR: %-10s | NIV: %d | VIES: %d | COUPS: %-2d | TEMPS: %-3ds    \n", p->nom, p->niveau, p->vies, p->coups, tr);
+
+    printf("CONTRAT: ");
+    if(p->contrat[0] > 0) printf("S:%d/%d ", p->recolte[0], p->contrat[0]);
+    if(p->contrat[1] > 0) printf("F:%d/%d ", p->recolte[1], p->contrat[1]);
+    if(p->contrat[2] > 0) printf("P:%d/%d ", p->recolte[2], p->contrat[2]);
+    if(p->contrat[3] > 0) printf("O:%d/%d ", p->recolte[3], p->contrat[3]);
+    if(p->contrat[4] > 0) printf("M:%d/%d ", p->recolte[4], p->contrat[4]);
+    printf("                                \n");
+    printf("---------------------------------------------------------------------------\n");
+}
+
+void afficher_grille_seule(Partie *p) {
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    for (int i = 0; i < L; i++) {
+        gotoxy(0, i + 3);
+        for (int j = 0; j < C; j++) {
+            char c = p->grille[i][j];
+
+            // 1. GESTION DU CURSEUR (Le bloc blanc/gris de ton image)
+            if (i == p->cy && j == p->cx) {
+                // Fond gris clair/blanc, Texte noir
+                SetConsoleTextAttribute(hConsole, BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_BLUE);
+            }
+            else {
+                // Couleurs normales des fruits sur fond noir
+                switch(c) {
+                    case 'S': set_color(14); break; // Jaune
+                    case 'F': set_color(12); break; // Rouge
+                    case 'P': set_color(10); break; // Vert
+                    case 'O': set_color(15); break; // Blanc
+                    case 'M': set_color(13); break; // Magenta
+                    default:  set_color(7);
+                }
+            }
+
+            // 2. LOGIQUE DE LA MINUSCULE (SÉLECTION)
+            char c_affichage = c;
+            if (i == p->sy && j == p->sx) {
+                if (c_affichage >= 'A' && c_affichage <= 'Z') {
+                    c_affichage += 32; // On passe en minuscule
+                }
+            }
+
+            // 3. AFFICHAGE DU CARACTÈRE
+            printf("%c", (c_affichage == ' ' ? '.' : c_affichage));
+
+            // 4. ESPACEMENT ET RESET COULEUR
+            // On remet toujours le fond noir après le caractère
+            SetConsoleTextAttribute(hConsole, 7);
+            printf(" "); // L'unique espace entre les colonnes pour l'aération
+        }
+    }
+}
