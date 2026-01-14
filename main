@@ -1,0 +1,151 @@
+#include <stdio.h>
+#include <conio.h>
+#include <time.h>
+#include <windows.h>
+#include <string.h>
+#include "jeu.h"
+
+int main() {
+    // Largeur 100 pour l'espacement "Fruit + Espace"
+    system("mode con: cols=100 lines=45");
+
+    srand(time(NULL));
+
+    // Initialisation : sx/sy à -1 pour qu'aucune minuscule n'apparaisse au début
+    Partie p = { .niveau = 1, .vies = 5, .cx = 0, .cy = 0, .sx = -1, .sy = -1 };
+    strcpy(p.nom, "");
+
+    system("cls");
+    cacher_curseur();
+
+    // 1. GESTION DU PROFIL
+    if (!(charger(&p) && strlen(p.nom) > 0)) {
+        printf("=== BIENVENUE ===\nNom du joueur : ");
+        fflush(stdin);
+        if (scanf("%19s", p.nom) != 1) strcpy(p.nom, "Joueur");
+        p.niveau = 1; p.vies = 5;
+        sauvegarder(&p);
+    }
+
+    // 2. INITIALISATION DU NIVEAU
+    initialiser_niveau(&p);
+    system("cls");
+
+    time_t start = time(NULL);
+    int last_tr = -1;
+
+    // --- AFFICHAGE INITIAL (CRUCIAL POUR QUE LE PLATEAU APPARAISSE) ---
+    afficher_interface(&p, p.temps_max);
+    afficher_grille_seule(&p);
+
+    // 3. BOUCLE DE JEU PRINCIPALE
+    while (p.vies > 0) {
+        // Calcul du temps restant
+        int tr = p.temps_max - (int)difftime(time(NULL), start);
+
+        // Mise à jour de l'interface (Chrono) sans effacer tout l'écran
+        if (tr != last_tr) {
+            afficher_interface(&p, tr);
+            last_tr = tr;
+        }
+
+        // --- VERIFICATION ECHEC (TEMPS OU COUPS) ---
+        if (tr <= 0 || p.coups <= 0) {
+            system("cls");
+            p.vies--;
+            printf("\nNIVEAU ECHOUE ! Vies restantes : %d\n", p.vies);
+            sauvegarder(&p);
+            Sleep(2000);
+
+            if (p.vies <= 0) {
+                printf("GAME OVER ! Retour au niveau 1.\n");
+                p.niveau = 1; p.vies = 5;
+                sauvegarder(&p);
+                _getch();
+                break;
+            }
+            initialiser_niveau(&p);
+            start = time(NULL);
+            system("cls");
+            afficher_interface(&p, p.temps_max);
+            afficher_grille_seule(&p); // On force le réaffichage après l'échec
+            continue;
+        }
+
+        // --- VERIFICATION VICTOIRE (PASSAGE NIVEAU) ---
+        int niveau_reussi = 1;
+        for (int k = 0; k < 5; k++) {
+            if (p.contrat[k] > 0 && p.recolte[k] < p.contrat[k]) {
+                niveau_reussi = 0;
+                break;
+            }
+        }
+
+        if (niveau_reussi) {
+            Sleep(500);
+            system("cls");
+            if (p.niveau >= 3) {
+                printf("\nFELICITATIONS %s ! VOUS AVEZ GAGNE LA PARTIE !\n", p.nom);
+                remove("save.txt");
+                _getch();
+                return 0;
+            } else {
+                printf("\nNIVEAU %d REUSSI !\n", p.niveau);
+                p.niveau++;
+                sauvegarder(&p);
+                Sleep(2000);
+                initialiser_niveau(&p);
+                start = time(NULL);
+                system("cls");
+                afficher_interface(&p, p.temps_max);
+                afficher_grille_seule(&p); // On force le réaffichage pour le nouveau niveau
+                continue;
+            }
+        }
+
+        // --- GESTION DES COMMANDES ---
+        if (_kbhit()) {
+            char key = _getch();
+            int action = 0;
+
+            // Déplacements
+            if (key == 'z' && p.cy > 0) { p.cy--; action = 1; }
+            if (key == 's' && p.cy < L-1) { p.cy++; action = 1; }
+            if (key == 'q' && p.cx > 0) { p.cx--; action = 1; }
+            if (key == 'd' && p.cx < C-1) { p.cx++; action = 1; }
+
+            // Sélection Espace
+            if (key == ' ') {
+                if (p.sx == -1) {
+                    p.sx = p.cx; p.sy = p.cy; // Mémorise la case (deviendra minuscule)
+                } else {
+                    if (abs(p.sx - p.cx) + abs(p.sy - p.cy) == 1) {
+                        permuter(&p, p.sx, p.sy, p.cx, p.cy);
+                        if (detecter_et_supprimer(&p)) {
+                            p.coups--;
+                            do {
+                                afficher_grille_seule(&p);
+                                Sleep(250);
+                                appliquer_gravite(&p);
+                                afficher_grille_seule(&p);
+                            } while (detecter_et_supprimer(&p));
+                        } else {
+                            permuter(&p, p.sx, p.sy, p.cx, p.cy); // Annulation
+                        }
+                    }
+                    p.sx = -1; p.sy = -1; // Reset minuscule
+                }
+                action = 1;
+            }
+
+            if (key == 27) { sauvegarder(&p); break; }
+
+            // Si une touche a été pressée, on redessine UNIQUEMENT la grille
+            if (action) {
+                afficher_grille_seule(&p);
+            }
+        }
+        Sleep(10);
+    }
+    return 0;
+}
